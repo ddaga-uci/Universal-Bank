@@ -1,0 +1,178 @@
+### BANA 288: Predictive Analytics
+
+### Homework 1
+### Name: Darshana Daga
+
+##### Libraries
+```{r}
+library(dplyr)
+library(ggplot2) 
+library(MatchIt)
+library(psych)  
+```
+
+##### Read the bank approval data
+```{r}
+setwd('C:\\Users\\darsh\\OneDrive\\Spring Quarter\\Predictive Analytics\\Assignment1')
+options(stringsAsFactors = TRUE)    #need to run this twice
+dat <- read.csv("hw1_universal_bank.csv")
+names(dat)
+str(dat)
+```
+# Question A
+##### Pie chart showing family sizes of customers
+```{r}
+fam <- table(dat$Fam_Size)
+pie(fam, names(fam), main = "Family_Size", 
+    col = c("SkyBlue", "Pink", "#e9ecef", "#69b3a2"))
+```
+
+There seems to be almost equal distribution of customer family sizes between 1 to 4 people per household.
+
+##### Barplot showing education levels of customers
+```{r}
+bar <- ggplot(dat, aes(x=as.factor(Education), fill=as.factor(Education))) + 
+  geom_bar( ) + theme(legend.position="none")
+print(bar + ggtitle("Customer Education Levels") +
+        labs(y="Count", x = "Education levels"))
+```
+
+The education level 1 seems to be the most common among Universal bank customers.
+
+##### Histogram showing customer age distribution
+```{r}
+hist <- ggplot(dat, aes(x=(Age),)) + 
+  geom_histogram( binwidth=3, fill="#69b3a2", color="#e9ecef",) +
+  scale_fill_hue(c = 40) +
+  theme(legend.position="none")
+print(hist + ggtitle("Customer Age Distribution") +
+        labs(y="Count", x = "Age"))
+```
+
+The distribution of age seems close to normal distribution, with few peaks in middle, and age 50 has highest frequency. 
+
+##### Boxplot showing customer income level distribution  
+```{r}
+boxplot(dat$Income,data=dat, main="Income levels",
+       ylab="Customer Income", col = c("lightgreen"))
+```
+
+The income level of the customers are mostly between 40 - 100 thousand dollars with few outliers with income levels higher than 200 thousand dollars. 
+
+
+# Question B
+##### Conditional Boxplot 1 - credit card average conditional of acceptance of offer
+```{r}
+boxplot(Crdt_Crd_Avg~Acpt_Offer,data=dat, 
+        main="Average Credit card \nlevels based on offer acceptance",
+        xlab="Offer Acceptance", ylab="Credit Card Average", 
+        col=c("lightgreen", "skyblue"))
+```
+
+
+##### Conditional Boxplot 2 - income conditional on acceptance of offer
+```{r}
+boxplot(Income~Acpt_Offer,data=dat, main="Income levels & Offer Acceptance",
+        xlab="Offer Acceptance", ylab="Customer Income", 
+        col = c("lightgreen", "skyblue"))
+```
+
+# Question C
+##### Scatterplot between income and credit card average
+```{r}
+plot(dat$Income,dat$Crdt_Crd_Avg, 
+     xlab="Income", ylab = "Avg Credit Card Debt")
+abline(lm(dat$Crdt_Crd_Avg~dat$Income,),col = c("red"), lwd = 3)
+```
+
+In the context of this data, with a preliminary analysis using scatter plot between income and credit card average spend, and fitting a regression line we see a positive upward trend. It shows that as income level increases the average credit card spend increases as well. But to understand the effect and degree of this relationship further analysis is required.
+
+##### Scatterplot between credit card average and offer acceptance
+```{r}
+plot(dat$Crdt_Crd_Avg,dat$Acpt_Offer, 
+     xlab="Avg Credit Card Debt", ylab = "Offer Acceptance")
+abline(lm(dat$Acpt_Offer~dat$Crdt_Crd_Avg,),col = c("red"), lwd = 3)
+```
+
+Given the outcome variable here is binary outcome of a customer accepting a offer or not, a linear model isn't really giving much insights. Its hard to explain how the average credit card debt is effecting the offer acceptance. It will be ideal to use other form of analysis to understand relationships between a binary and conitnious variable relationship, and better predict the acceptance of offer.
+
+# Question D
+1. On average the customers income and credit card spend is higher if they have accepted the offer.Also, there seems to be lot of high income and high spending customers who have not accepted the offer, it might be a good idea to further analyze why these customers have not accepted the offer, and make strategy to convert these customers. 
+
+2. There seems to be a positive relationship between income levels of customers and the amount on average they spend on their credit card. Its a good insight which can be used for other promotional items within the bank. Also the customer age group is pretty well distributed, it can be interesting to see the spending pattern as per the age groups. 
+
+3. There are lot of bank customers who only have education level 1, it can be further analyzed to see if there is any correlation of this to people accepting bank's offer. Further analysis of correlation of education to income, the average spending can we useful insights to come of with unique product offering for the segment.
+
+
+# Question E
+##### Descriptive statastics showing mean, median, standar deviation, IQR for the universal bank data(ID has been removed)
+```{r}
+dat1 <- dat[2:15]
+summary(dat1)
+stat <-psych::describe(dat1,skew=FALSE)
+print(stat[,c(2,4)])
+```
+Table 1 shows the mean, median and IQR for the data and the second table 2 shows the standar deviations and count (Psych package used for it).
+
+# Question F
+##### Correlation between offer acceptance and all other variables
+```{r}
+cor(dat1, method = c('pearson')) # Correlation for all pair variables
+
+cor(dat1,dat1$Acpt_Offer,method="pearson") #correlation of acceptance of offer to all variables
+```
+
+Based on the above correlation coefficents, below are the three strong predictors of offer acceptance;
+
+1. Income (0.5172405150)
+
+2. Credit Car Average (0.3769046179)
+
+3. CD Account (0.3383284125)
+
+# Question G
+##### Simple linear regression that predicts monthly average credit card debt as a function of income
+```{r}
+reg <- lm(Crdt_Crd_Avg ~ Income, data = dat)
+summary(reg)
+```
+1.The estimated regression model for average credit card spend is:Estimated Crdt_Crd_Avg ($1000) = 0.11037 + 0.02473 * Income
+ 
+2.The overall model fit is relatively moderate.The R-squared (multiple r-squared) is 0.4132 or Income could explain 41.32% variability in avergae credit card spends.
+
+3.Interpretations of the Slope and Intercept:
+(Slope)  Keeping all other things constant a 1 unit increase in income (in $1000), the average credit card spend increases by 0.02473 units or 24.73 dollars. 
+(Intercept)  The average spending on credit card is 0.11. This apprears to be resonable in context of the problem as its median spending is around 1.50 (in $1000)
+
+# Question H
+```{r}
+reg1 <- lm(Acpt_Offer ~ Crdt_Crd_Avg, data = dat)
+summary(reg1)
+```
+
+1.The estimated regression model for acceptance of offer is:Estimated Acpt_Offer = -0.021810 + 0.063656 * Crdt_Crd_Avg
+
+2.The overall model fit is poor.The R-squared (multiple r-squared) is 0.1421 or credit card spends could only explain 14.21% variability in predicting the acceptance of offer.
+
+3.Model effectiveness of credit card spending used for predicting customer accepting offer or not is extremely poor. Even though the variable crdt_crd_avg is a good predictor with a very low p value, the model output is a real continuous number, whereas the outcome of interest is binary (0=not accepting offer & 1 = accepting offer). A classification approach is more suitable for this kind of problems.
+
+# Question I
+```{r}
+newdat <- data.frame(Income = 75)
+predict(reg, newdat, interval = "prediction", level = 0.99)
+```
+
+```{r}
+newdat1 <- data.frame(Crdt_Crd_Avg = 1.250)
+predict(reg1, newdat1, interval = "prediction", level = 0.99)
+```
+1. In model one the upper and lower bound make some sense as well as has some issues, with our model we predict the upper, lower and fit of model in predicting the average credit card spending. I do feel that there is issue with lower bound of spending prediction as its in negative value, but its to be kept in mind the model fit was just around 41% approx.
+
+2. The model 2 does not make any sense for the outcome of interest which is a binary variable. The fit, upper and lower limits all are in continuous numbers and don't provide any insights.
+
+# Question J
+To classify if a customer accepts the offer or not here are two methods which I will use for this kind of a problem/challenge.
+
+1. Logistic regression: Overall its widely known that logistic regression is used for binary and categorical variable over a linear model. It takes the X variables and uses it explain if a particular instance belongs to one of the binary/categorical groups. It is really useful to suggest what combinations of input variables help in predicting the class labels, for example - yes/no, 0/1, male/female/other etc.
+
+2. Decision Tree: Decision tree uses probability of input variables and helps it in creating a logical flow which increasing the knowledge of what attributes can help in predicting if a customer will accept the offer or not, based on a determined level of probability threshold. It uses variables(all continuous variables are also discretized) and follows a nested set of leaves showing how best the outcome can be classified. Decision trees are extremely useful as they can help in understanding a lot of possible factors that influence the outcome.
